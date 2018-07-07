@@ -1,4 +1,4 @@
-﻿namespace Multithreading.Queues
+﻿namespace GoodPractices.Multithreading
 {
     using System;
     using System.Collections.Concurrent;
@@ -7,25 +7,25 @@
 
     public class TaskQueue
     {
-        private readonly Task[] _workers;
-        private readonly ConcurrentQueue<Action> _testsQueue = new ConcurrentQueue<Action>();
-        private readonly CancellationTokenSource _cancelationToken = new CancellationTokenSource();
+        private readonly Task[] workers;
+        private readonly ConcurrentQueue<Action> testsQueue = new ConcurrentQueue<Action>();
+        private readonly CancellationTokenSource cancelationToken = new CancellationTokenSource();
 
         public TaskQueue(int workersCount)
         {
-            _workers = new Task[workersCount];
+            this.workers = new Task[workersCount];
         }
 
         public void Wait()
         {
-            for (int i = 0; i < _workers.Length; i++)
+            for (var i = 0; i < this.workers.Length; i++)
             {
-                _workers[i] = Task.Factory.StartNew(Consume, _cancelationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                this.workers[i] = Task.Factory.StartNew(this.Consume, this.cancelationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             }
 
             try
             {
-                Task.WaitAll(_workers);
+                Task.WaitAll(this.workers);
             }
             catch (AggregateException ex)
             {
@@ -38,13 +38,12 @@
 
         public void Enqueue(Action action)
         {
-            _testsQueue.Enqueue(action);
+            this.testsQueue.Enqueue(action);
         }
 
         private void Consume()
         {
-            Action action;
-            while (_testsQueue.TryDequeue(out action))
+            while (this.testsQueue.TryDequeue(out var action))
             {
                 action();
             }
